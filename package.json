@@ -1,0 +1,28 @@
+{
+  "name": "@ai-chat/app",
+  "version": "1.0.0",
+  "description": "AI Chat App with Next.js and NestJS",
+  "private": true,
+  "packageManager": "pnpm@10.29.2",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "dev:client": "pnpm --filter @ai-chat/client dev",
+    "dev:server": "pnpm --filter @ai-chat/server dev",
+    "build": "pnpm -r build",
+    "build:client": "pnpm --filter @ai-chat/client build",
+    "build:server": "pnpm --filter @ai-chat/server build",
+    "start": "pnpm -r start",
+    "start:client": "pnpm --filter @ai-chat/client start",
+    "start:server": "pnpm --filter @ai-chat/server start:prod",
+    "lint": "pnpm -r lint",
+    "lint:client": "pnpm --filter @ai-chat/client lint",
+    "lint:server": "pnpm --filter @ai-chat/server lint",
+    "test": "pnpm -r test",
+    "test:client": "pnpm --filter @ai-chat/client test",
+    "test:server": "pnpm --filter @ai-chat/server test",
+    "format": "pnpm --filter @ai-chat/server format"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
