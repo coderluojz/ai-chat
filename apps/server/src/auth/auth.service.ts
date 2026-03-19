@@ -135,4 +135,53 @@ export class AuthService {
       email: user.email || "",
     });
   }
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const supabase = this.supabaseService.getClient();
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${this.configService.get<string>("FRONTEND_URL", "http://localhost:3000")}/reset-password`,
+    });
+
+    if (error) {
+      this.logger.warn(`发送重置密码邮件失败: ${error.message}`);
+      // 为了安全，即使邮箱不存在也返回成功
+    }
+
+    return {
+      message: "如果该邮箱已注册，重置密码的邮件已发送",
+    };
+  }
+
+  async resetPassword(
+    token: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    const supabase = this.supabaseService.getClient();
+
+    // 使用 token 交换 session
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      token_hash: token,
+      type: "recovery",
+    });
+
+    if (verifyError) {
+      this.logger.warn(`验证重置令牌失败: ${verifyError.message}`);
+      throw new UnauthorizedException("重置链接无效或已过期");
+    }
+
+    // 更新密码
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (updateError) {
+      this.logger.warn(`更新密码失败: ${updateError.message}`);
+      throw new UnauthorizedException("密码更新失败，请重试");
+    }
+
+    return {
+      message: "密码重置成功，请使用新密码登录",
+    };
+  }
 }
