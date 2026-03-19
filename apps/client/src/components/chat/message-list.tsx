@@ -54,10 +54,9 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="inline-block px-4 py-2.5 rounded-2xl bubble-ai shadow-lg transition-all duration-500 hover:shadow-primary/5">
-                    <div className="prose prose-neutral prose-sm md:prose-base dark:prose-invert max-w-none prose-p:leading-normal prose-p:my-1.5 prose-headings:my-2 prose-pre:my-2 prose-ul:my-1 prose-li:my-0.5 text-foreground/90">
+                  <div className="inline-block px-5 py-4 rounded-2xl bubble-ai shadow-lg">
+                    <div className="prose prose-neutral prose-sm md:prose-base max-w-none prose-p:leading-relaxed prose-p:my-2 prose-headings:my-3 prose-pre:my-3 prose-ul:my-2 prose-ol:my-2 prose-li:my-1 text-foreground/95">
                       <ReactMarkdown
-                        // ... 保持原有代码 ...
                         remarkPlugins={[remarkGfm]}
                         rehypePlugins={[rehypeHighlight, rehypeRaw]}
                         components={{
@@ -70,18 +69,34 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                           }: any) {
                             const match = /language-(\w+)/.exec(className || '')
                             return !inline && match ? (
-                              <div className="relative my-4 rounded-xl border border-border/40 bg-zinc-950 overflow-hidden text-[13px] shadow-lg">
-                                <div className="flex items-center px-4 py-2 border-b border-white/10 bg-white/5">
-                                  <span className="text-xs text-zinc-400 font-mono font-medium">
+                              <div className="group/code relative my-4 rounded-xl overflow-hidden shadow-xl border border-white/10 bg-gradient-to-b from-zinc-900 to-zinc-950">
+                                <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-800/50 border-b border-white/5 backdrop-blur-sm">
+                                  <span className="text-xs font-medium text-zinc-300 bg-zinc-700/50 px-2.5 py-1 rounded-lg font-mono tracking-wide">
                                     {match[1]}
                                   </span>
-                                  <div className="ml-auto flex items-center gap-2">
-                                    <button className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 rounded-md hover:bg-white/5 cursor-pointer">
-                                      <Copy className="w-3.5 h-3.5" />
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="flex gap-1.5 mr-2">
+                                      <span className="w-2.5 h-2.5 rounded-full bg-red-500/60"></span>
+                                      <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/60"></span>
+                                      <span className="w-2.5 h-2.5 rounded-full bg-green-500/60"></span>
+                                    </div>
+                                    <button
+                                      onClick={() =>
+                                        navigator.clipboard.writeText(
+                                          String(children).replace(
+                                            /<[^>]*>/g,
+                                            '',
+                                          ),
+                                        )
+                                      }
+                                      className="text-zinc-400 hover:text-white transition-all duration-200 p-1.5 rounded-lg hover:bg-white/10 cursor-pointer opacity-0 group-hover/code:opacity-100"
+                                      title="复制代码"
+                                    >
+                                      <Copy className="w-4 h-4" />
                                     </button>
                                   </div>
                                 </div>
-                                <div className="p-4 overflow-x-auto text-zinc-200 font-mono leading-relaxed">
+                                <div className="p-4 overflow-x-auto text-zinc-100 font-mono leading-relaxed text-[13px] custom-scrollbar">
                                   <code className={className} {...props}>
                                     {children}
                                   </code>
@@ -89,7 +104,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                               </div>
                             ) : (
                               <code
-                                className="bg-muted px-1.5 py-0.5 rounded-md text-[13px] font-mono font-medium border border-border/30"
+                                className="px-2 py-1 rounded-md text-[13px] font-mono font-medium bg-[#fff5f5] border text-[#ff502c]"
                                 {...props}
                               >
                                 {children}
@@ -98,7 +113,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                           },
                           p({ children }) {
                             return (
-                              <p className="mb-1.5 last:mb-0 leading-[1.8]">
+                              <p className="mb-2 last:mb-0 leading-[1.75] text-foreground/95">
                                 {children}
                               </p>
                             )
@@ -109,7 +124,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                                 href={href}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-primary font-medium underline underline-offset-4 decoration-primary/30 hover:decoration-primary transition-all cursor-pointer"
+                                className="text-indigo-400 hover:text-indigo-300 font-medium underline underline-offset-4 decoration-indigo-400/30 hover:decoration-indigo-300 transition-all duration-200 cursor-pointer no-underline hover:underline"
                               >
                                 {children}
                               </a>
@@ -117,9 +132,128 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                           },
                           blockquote({ children }) {
                             return (
-                              <blockquote className="border-l-4 border-primary/20 pl-4 italic text-muted-foreground my-4">
+                              <blockquote className="my-4 pl-4 border-l-4 border-indigo-500/30 bg-indigo-500/5 py-2 pr-4 rounded-r-lg text-foreground/80 italic">
                                 {children}
                               </blockquote>
+                            )
+                          },
+                          h1({ children }) {
+                            return (
+                              <h1 className="text-2xl font-bold mt-4 mb-2 text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+                                {children}
+                              </h1>
+                            )
+                          },
+                          h2({ children }) {
+                            return (
+                              <h2 className="text-xl font-semibold mt-3.5 mb-2 text-foreground/95">
+                                {children}
+                              </h2>
+                            )
+                          },
+                          h3({ children }) {
+                            return (
+                              <h3 className="text-lg font-semibold mt-3 mb-1.5 text-foreground/90">
+                                {children}
+                              </h3>
+                            )
+                          },
+                          h4({ children }) {
+                            return (
+                              <h4 className="text-base font-semibold mt-2.5 mb-1 text-foreground/85">
+                                {children}
+                              </h4>
+                            )
+                          },
+                          h5({ children }) {
+                            return (
+                              <h5 className="text-sm font-semibold mt-2 mb-1 text-foreground/80">
+                                {children}
+                              </h5>
+                            )
+                          },
+                          h6({ children }) {
+                            return (
+                              <h6 className="text-xs font-semibold mt-1.5 mb-0.5 text-foreground/75 uppercase tracking-wider">
+                                {children}
+                              </h6>
+                            )
+                          },
+                          ul({ children }) {
+                            return (
+                              <ul className="my-3 pl-6 space-y-1.5 marker:text-indigo-500/60">
+                                {children}
+                              </ul>
+                            )
+                          },
+                          ol({ children }) {
+                            return (
+                              <ol className="my-3 pl-6 space-y-1.5 marker:text-indigo-500/60 marker:font-semibold">
+                                {children}
+                              </ol>
+                            )
+                          },
+                          li({ children }) {
+                            return (
+                              <li className="text-foreground/90 leading-relaxed">
+                                {children}
+                              </li>
+                            )
+                          },
+                          strong({ children }) {
+                            return (
+                              <strong className="font-bold text-foreground/95">
+                                {children}
+                              </strong>
+                            )
+                          },
+                          em({ children }) {
+                            return (
+                              <em className="italic text-foreground/80">
+                                {children}
+                              </em>
+                            )
+                          },
+                          hr() {
+                            return (
+                              <hr className="my-6 border-t border-white/10" />
+                            )
+                          },
+                          table({ children }) {
+                            return (
+                              <div className="my-4 overflow-x-auto rounded-lg border border-white/10">
+                                <table className="w-full text-left border-collapse">
+                                  {children}
+                                </table>
+                              </div>
+                            )
+                          },
+                          thead({ children }) {
+                            return (
+                              <thead className="bg-zinc-800/30 border-b border-white/10">
+                                {children}
+                              </thead>
+                            )
+                          },
+                          th({ children }) {
+                            return (
+                              <th className="px-4 py-2.5 font-semibold text-foreground/90 text-sm">
+                                {children}
+                              </th>
+                            )
+                          },
+                          td({ children }) {
+                            return (
+                              <td className="px-4 py-2 text-foreground/80 text-sm border-b border-white/5">
+                                {children}
+                              </td>
+                            )
+                          },
+                          tr({ children }) {
+                            return (
+                              <tr className="hover:bg-white/3 transition-colors">
+                                {children}
+                              </tr>
                             )
                           },
                         }}
