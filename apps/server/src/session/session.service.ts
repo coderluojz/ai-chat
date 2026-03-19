@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { SupabaseService } from '../supabase/supabase.service';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { SupabaseService } from "../supabase/supabase.service";
 
 @Injectable()
 export class SessionService {
@@ -9,10 +9,10 @@ export class SessionService {
     const supabase = this.supabaseService.getClient();
 
     const { data, error } = await supabase
-      .from('sessions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('updated_at', { ascending: false });
+      .from("sessions")
+      .select("*")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false });
 
     if (error) throw error;
     return data;
@@ -22,8 +22,8 @@ export class SessionService {
     const supabase = this.supabaseService.getClient();
 
     const { data, error } = await supabase
-      .from('sessions')
-      .insert({ user_id: userId, title: title || '新对话' })
+      .from("sessions")
+      .insert({ user_id: userId, title: title || "新对话" })
       .select()
       .single();
 
@@ -35,15 +35,15 @@ export class SessionService {
     const supabase = this.supabaseService.getClient();
 
     const { data, error } = await supabase
-      .from('sessions')
+      .from("sessions")
       .update({ title, updated_at: new Date().toISOString() })
-      .eq('id', sessionId)
-      .eq('user_id', userId)
+      .eq("id", sessionId)
+      .eq("user_id", userId)
       .select()
       .single();
 
     if (error || !data) {
-      throw new NotFoundException('会话不存在');
+      throw new NotFoundException("会话不存在");
     }
     return data;
   }
@@ -52,10 +52,10 @@ export class SessionService {
     const supabase = this.supabaseService.getClient();
 
     const { error } = await supabase
-      .from('sessions')
+      .from("sessions")
       .delete()
-      .eq('id', sessionId)
-      .eq('user_id', userId);
+      .eq("id", sessionId)
+      .eq("user_id", userId);
 
     if (error) throw error;
     return { success: true };
@@ -66,21 +66,21 @@ export class SessionService {
 
     // 先验证会话归属
     const { data: session } = await supabase
-      .from('sessions')
-      .select('id')
-      .eq('id', sessionId)
-      .eq('user_id', userId)
+      .from("sessions")
+      .select("id")
+      .eq("id", sessionId)
+      .eq("user_id", userId)
       .single();
 
     if (!session) {
-      throw new NotFoundException('会话不存在');
+      throw new NotFoundException("会话不存在");
     }
 
     const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('session_id', sessionId)
-      .order('created_at', { ascending: true });
+      .from("messages")
+      .select("*")
+      .eq("session_id", sessionId)
+      .order("created_at", { ascending: true });
 
     if (error) throw error;
     return data;
@@ -88,13 +88,13 @@ export class SessionService {
 
   async addMessage(
     sessionId: string,
-    role: 'user' | 'assistant' | 'system',
-    content: string,
+    role: "user" | "assistant" | "system",
+    content: string
   ) {
     const supabase = this.supabaseService.getClient();
 
     const { data, error } = await supabase
-      .from('messages')
+      .from("messages")
       .insert({ session_id: sessionId, role, content })
       .select()
       .single();
@@ -103,9 +103,9 @@ export class SessionService {
 
     // 更新会话的 updated_at
     await supabase
-      .from('sessions')
+      .from("sessions")
       .update({ updated_at: new Date().toISOString() })
-      .eq('id', sessionId);
+      .eq("id", sessionId);
 
     return data;
   }

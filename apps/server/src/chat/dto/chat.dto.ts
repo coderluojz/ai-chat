@@ -1,8 +1,8 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class ChatCompletionsDto {
   @IsString()
-  @IsNotEmpty({ message: '消息内容不能为空' })
+  @IsNotEmpty({ message: "消息内容不能为空" })
   message!: string;
 
   @IsOptional()
