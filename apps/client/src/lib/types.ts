@@ -34,3 +34,18 @@ export type RegisterData = {
   password: string;
   name?: string;
 };
+
+export type ApiErrorResponse = {
+  code: number;
+  message: string;
+  data: null;
+  timestamp: string;
+  path: string;
+};
+
+export type ApiResponse<T = unknown> = {
+  code: number;
+  message: string;
+  data: T;
+  timestamp: string;
+};

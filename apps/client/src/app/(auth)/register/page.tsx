@@ -22,8 +22,9 @@ export default function RegisterPage() {
 
     try {
       await register(email, password, name);
-    } catch (err: any) {
-      toast.error(err.message || '注册失败，请检查填写内容');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '注册失败，请检查填写内容';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

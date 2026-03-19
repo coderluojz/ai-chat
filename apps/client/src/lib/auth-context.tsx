@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { api } from './api-client';
+import { api, ApiError } from './api-client';
 import { useAuthStore } from './store/auth-store';
 import { useLogin, useRegister, useLogout, useProfile } from './queries/use-auth-query';
 
@@ -28,8 +28,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!initializedRef.current) {
       initializedRef.current = true;
-      profileQuery.refetch().catch((err: any) => {
-        if (err.status === 401 || err.status === 403) {
+      profileQuery.refetch().catch((err: unknown) => {
+        if (err instanceof ApiError && (err.code === 401 || err.code === 403)) {
           api.setToken(null);
           setUser(null);
         }
@@ -42,7 +42,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await loginMutation.mutateAsync({ email, password });
       toast.success('登录成功');
       router.push('/');
-    } catch (err: any) {
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        throw new Error(err.message);
+      }
       throw err;
     }
   };
@@ -52,7 +55,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await registerMutation.mutateAsync({ email, password, name });
       toast.success('账户创建成功');
       router.push('/');
-    } catch (err: any) {
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        throw new Error(err.message);
+      }
       throw err;
     }
   };

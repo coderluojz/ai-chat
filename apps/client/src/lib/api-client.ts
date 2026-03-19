@@ -1,7 +1,21 @@
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import type { User, Message, Session, AuthResponse, LoginCredentials, RegisterData } from './types';
 
-const API_BASE = 'http://localhost:3001';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+export class ApiError extends Error {
+  code: number;
+  timestamp: string;
+  path: string;
+
+  constructor(data: { code: number; message: string; timestamp: string; path: string }) {
+    super(data.message);
+    this.name = 'ApiError';
+    this.code = data.code;
+    this.timestamp = data.timestamp;
+    this.path = data.path;
+  }
+}
 
 class ApiClient {
   private token: string | null = null;
@@ -50,11 +64,22 @@ class ApiClient {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: '请求失败' }));
-      throw new Error(error.message || `HTTP ${response.status}`);
+      const errorData = await response.json().catch(() => ({
+        code: response.status,
+        message: '请求失败',
+        timestamp: new Date().toISOString(),
+        path,
+      }));
+      throw new ApiError({
+        code: errorData.code || response.status,
+        message: errorData.message || `HTTP ${response.status}`,
+        timestamp: errorData.timestamp || new Date().toISOString(),
+        path: errorData.path || path,
+      });
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data !== undefined ? result.data : result;
   }
 
   auth = {

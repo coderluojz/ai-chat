@@ -1,18 +1,46 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable, UnauthorizedException, Logger } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
 import { SupabaseService } from "../supabase/supabase.service";
+import { User } from "../common/interfaces/database.interface";
+
+interface TokenPayload {
+  id: string;
+  email: string;
+  user_metadata?: {
+    name?: string;
+  };
+  created_at: string;
+}
+
+interface SupabaseUserMetadata {
+  name?: string;
+}
+
+function getUserMetadataName(
+  metadata: SupabaseUserMetadata | undefined,
+): string {
+  return metadata?.name || "";
+}
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private supabaseService: SupabaseService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
-  async register(email: string, password: string, name?: string) {
-    const supabase = this.supabaseService.getAuthClient();
+  async register(
+    email: string,
+    password: string,
+    name?: string,
+  ): Promise<{ user: User; access_token: string }> {
+    const supabase = this.supabaseService.getClient();
 
-    const { data, error } = await supabase.auth.signUp({
+    const result = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -20,72 +48,91 @@ export class AuthService {
       },
     });
 
-    if (error) {
-      throw new UnauthorizedException(error.message);
+    if (result.error) {
+      this.logger.warn(`注册失败: ${result.error.message}`);
+      throw new UnauthorizedException(result.error.message);
     }
 
-    const user = data.user;
-    if (!user) {
+    const supabaseUser = result.data.user;
+    if (!supabaseUser) {
       throw new UnauthorizedException("注册失败，请稍后重试");
     }
 
-    const token = this.jwtService.sign({
-      sub: user.id,
-      email: user.email,
-    });
+    const token = this.generateToken(supabaseUser as unknown as TokenPayload);
+    const userMetadata = supabaseUser.user_metadata as
+      | SupabaseUserMetadata
+      | undefined;
 
     return {
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.user_metadata?.name || "",
+        id: supabaseUser.id,
+        email: supabaseUser.email || "",
+        name: getUserMetadataName(userMetadata),
+        created_at: supabaseUser.created_at,
       },
       access_token: token,
     };
   }
 
-  async login(email: string, password: string) {
-    const supabase = this.supabaseService.getAuthClient();
+  async login(
+    email: string,
+    password: string,
+  ): Promise<{ user: User; access_token: string }> {
+    const supabase = this.supabaseService.getClient();
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const result = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
+    if (result.error) {
+      this.logger.warn(`登录失败: ${result.error.message}`);
       throw new UnauthorizedException("邮箱或密码错误");
     }
 
-    const user = data.user;
-    const token = this.jwtService.sign({
-      sub: user.id,
-      email: user.email,
-    });
+    const supabaseUser = result.data.user;
+    const token = this.generateToken(supabaseUser as unknown as TokenPayload);
+    const userMetadata = supabaseUser.user_metadata as
+      | SupabaseUserMetadata
+      | undefined;
 
     return {
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.user_metadata?.name || "",
+        id: supabaseUser.id,
+        email: supabaseUser.email || "",
+        name: getUserMetadataName(userMetadata),
+        created_at: supabaseUser.created_at,
       },
       access_token: token,
     };
   }
 
-  async getProfile(userId: string) {
+  async getProfile(userId: string): Promise<User> {
     const supabase = this.supabaseService.getClient();
 
-    const { data, error } = await supabase.auth.admin.getUserById(userId);
+    const result = await supabase.auth.admin.getUserById(userId);
 
-    if (error || !data.user) {
+    if (result.error || !result.data.user) {
       throw new UnauthorizedException("用户不存在");
     }
 
+    const supabaseUser = result.data.user;
+    const userMetadata = supabaseUser.user_metadata as
+      | SupabaseUserMetadata
+      | undefined;
+
     return {
-      id: data.user.id,
-      email: data.user.email,
-      name: data.user.user_metadata?.name || "",
-      created_at: data.user.created_at,
+      id: supabaseUser.id,
+      email: supabaseUser.email || "",
+      name: getUserMetadataName(userMetadata),
+      created_at: supabaseUser.created_at,
     };
+  }
+
+  private generateToken(user: TokenPayload): string {
+    return this.jwtService.sign({
+      sub: user.id,
+      email: user.email || "",
+    });
   }
 }

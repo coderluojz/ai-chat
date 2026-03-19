@@ -21,8 +21,9 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-    } catch (err: any) {
-      toast.error(err.message || '登录失败，请检查邮箱和密码');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '登录失败，请检查邮箱和密码';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

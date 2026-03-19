@@ -1,16 +1,26 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GenericSupabaseClient = SupabaseClient<any, any, any, any>;
+
 @Injectable()
 export class SupabaseService {
-  private client: SupabaseClient;
+  private readonly logger = new Logger(SupabaseService.name);
+  private client: GenericSupabaseClient;
 
   constructor(private configService: ConfigService) {
     const url = this.configService.get<string>("SUPABASE_URL");
     const serviceKey = this.configService.get<string>(
-      "SUPABASE_SERVICE_ROLE_KEY"
+      "SUPABASE_SERVICE_ROLE_KEY",
     );
+
+    if (!url || !serviceKey) {
+      throw new Error(
+        "Supabase 配置缺失：请检查 SUPABASE_URL 和 SUPABASE_SERVICE_ROLE_KEY",
+      );
+    }
 
     this.client = createClient(url, serviceKey, {
       auth: {
@@ -18,18 +28,11 @@ export class SupabaseService {
         persistSession: false,
       },
     });
+
+    this.logger.log("Supabase 客户端初始化成功");
   }
 
-  getClient(): SupabaseClient {
+  getClient(): GenericSupabaseClient {
     return this.client;
-  }
-
-  /**
-   * 使用 anon key 创建一个面向用户的 client（用于 Auth 操作）
-   */
-  getAuthClient(): SupabaseClient {
-    const url = this.configService.get<string>("SUPABASE_URL");
-    const anonKey = this.configService.get<string>("SUPABASE_ANON_KEY");
-    return createClient(url, anonKey);
   }
 }

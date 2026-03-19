@@ -1,4 +1,22 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import {
+  IsArray,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+  IsIn,
+} from "class-validator";
+import { Type } from "class-transformer";
+
+export class HistoryMessageDto {
+  @IsString()
+  @IsIn(["user", "assistant", "system"])
+  role!: "user" | "assistant" | "system";
+
+  @IsString()
+  @IsNotEmpty()
+  content!: string;
+}
 
 export class ChatCompletionsDto {
   @IsString()
@@ -11,5 +29,7 @@ export class ChatCompletionsDto {
 
   @IsOptional()
   @IsArray()
-  history?: any[];
+  @ValidateNested({ each: true })
+  @Type(() => HistoryMessageDto)
+  history?: HistoryMessageDto[];
 }

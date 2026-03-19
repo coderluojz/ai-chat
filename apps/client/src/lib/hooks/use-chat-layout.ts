@@ -9,7 +9,7 @@ import {
 } from '@/lib/queries/use-sessions-query'
 import { useAuthStore } from '@/lib/store/auth-store'
 import { useChatStore } from '@/lib/store/chat-store'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 
 export function useChatLayout(activeSessionId: string | null) {
@@ -32,6 +32,8 @@ export function useChatLayout(activeSessionId: string | null) {
   const messagesQuery = useMessages(activeSessionId || undefined)
   const createSessionMutation = useCreateSession()
   const deleteSessionMutation = useDeleteSession()
+
+  const initializedSessionsRef = useRef<Set<string>>(new Set())
 
   const {
     stream,
@@ -56,14 +58,14 @@ export function useChatLayout(activeSessionId: string | null) {
 
   useEffect(() => {
     if (messagesQuery.data && activeSessionId) {
-      const currentMessages = messagesList[activeSessionId]
-      if (!currentMessages || currentMessages.length === 0) {
+      if (!initializedSessionsRef.current.has(activeSessionId)) {
         setMessages(activeSessionId, messagesQuery.data)
+        initializedSessionsRef.current.add(activeSessionId)
       }
     } else if (!activeSessionId) {
       clearMessages('temp')
     }
-  }, [messagesQuery.data, activeSessionId, setMessages, clearMessages, messagesList])
+  }, [messagesQuery.data, activeSessionId, setMessages, clearMessages])
 
   const handleNewChat = useCallback(() => {
     stop()
@@ -80,8 +82,9 @@ export function useChatLayout(activeSessionId: string | null) {
           clearMessages('temp')
         }
         toast.success('删除会话成功')
-      } catch (err: any) {
-        toast.error(err.message || '删除会话失败')
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : '删除会话失败'
+        toast.error(message)
       }
     },
     [deleteSessionMutation, activeSessionId, setActiveSessionId, clearMessages],
@@ -103,10 +106,13 @@ export function useChatLayout(activeSessionId: string | null) {
           setActiveSessionId(sessionId)
           isNewSession = true
           clearMessages(sessionId)
+          // 标记为已初始化，防止 messagesQuery 覆盖
+          initializedSessionsRef.current.add(sessionId)
 
           onSuccess?.(sessionId)
-        } catch (err: any) {
-          toast.error(err.message || '创建会话失败')
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : '创建会话失败'
+          toast.error(message)
           return null
         }
       }
