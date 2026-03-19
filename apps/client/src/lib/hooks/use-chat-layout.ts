@@ -56,11 +56,14 @@ export function useChatLayout(activeSessionId: string | null) {
 
   useEffect(() => {
     if (messagesQuery.data && activeSessionId) {
-      setMessages(activeSessionId, messagesQuery.data)
+      const currentMessages = messagesList[activeSessionId]
+      if (!currentMessages || currentMessages.length === 0) {
+        setMessages(activeSessionId, messagesQuery.data)
+      }
     } else if (!activeSessionId) {
       clearMessages('temp')
     }
-  }, [messagesQuery.data, activeSessionId, setMessages, clearMessages])
+  }, [messagesQuery.data, activeSessionId, setMessages, clearMessages, messagesList])
 
   const handleNewChat = useCallback(() => {
     stop()
