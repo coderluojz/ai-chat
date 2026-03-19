@@ -3,7 +3,7 @@
 - 框架与语言：React (或 Next.js) + TypeScript
 - 全局状态管理：强制使用 `zustand`。禁止使用 Redux 或 Context API 处理复杂状态。
 - 数据请求与流处理：
-  - 标准 HTTP 请求封装：使用 `axios`。
+  - 标准 HTTP 请求封装：使用 `axios` 封装通用方法复用。
   - 数据获取、缓存与状态同步：强制使用 `@tanstack/react-query`。
   - AI 对话/流式数据接收：强制使用 `@microsoft/fetch-event-source` 处理 SSE。
 - 样式与动画：

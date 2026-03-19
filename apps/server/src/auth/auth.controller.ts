@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, Put, UseGuards } from "@nestjs/common";
 import {
   CurrentUser,
   JwtPayload,
 } from "../common/decorators/current-user.decorator";
 import { AuthService } from "./auth.service";
 import {
+  ChangePasswordDto,
   ForgotPasswordDto,
   LoginDto,
   RegisterDto,
@@ -40,5 +41,18 @@ export class AuthController {
   @Post("reset-password")
   async resetPassword(@Body() body: ResetPasswordDto) {
     return this.authService.resetPassword(body.token, body.newPassword);
+  }
+
+  @Put("change-password")
+  @UseGuards(JwtAuthGuard)
+  async changePassword(
+    @CurrentUser() user: JwtPayload,
+    @Body() body: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(
+      user.sub,
+      body.currentPassword,
+      body.newPassword,
+    );
   }
 }

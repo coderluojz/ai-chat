@@ -5,20 +5,32 @@ interface ChatState {
   sessions: Session[]
   messages: Record<string, Message[]>
   activeSessionId: string | null
+  initializedSessions: Set<string>
+  isStreaming: boolean
   setSessions: (sessions: Session[]) => void
+  addSession: (session: Session) => void
   setMessages: (sessionId: string, messages: Message[]) => void
   addMessage: (sessionId: string, message: Message) => void
   updateLastMessage: (sessionId: string, content: string) => void
   addOrUpdateLastMessage: (sessionId: string, content: string) => void
   clearMessages: (sessionId: string) => void
   setActiveSessionId: (id: string | null) => void
+  markSessionInitialized: (sessionId: string) => void
+  isSessionInitialized: (sessionId: string) => boolean
+  setIsStreaming: (isStreaming: boolean) => void
 }
 
-export const useChatStore = create<ChatState>((set) => ({
+export const useChatStore = create<ChatState>((set, get) => ({
   sessions: [],
   messages: {},
   activeSessionId: null,
+  initializedSessions: new Set(),
+  isStreaming: false,
   setSessions: (sessions) => set({ sessions }),
+  addSession: (session) =>
+    set((state) => ({
+      sessions: [session, ...state.sessions],
+    })),
   setMessages: (sessionId, messages) =>
     set((state) => ({
       messages: { ...state.messages, [sessionId]: messages },
@@ -80,4 +92,12 @@ export const useChatStore = create<ChatState>((set) => ({
       }
     }),
   setActiveSessionId: (id) => set({ activeSessionId: id }),
+  markSessionInitialized: (sessionId) =>
+    set((state) => {
+      const newSet = new Set(state.initializedSessions)
+      newSet.add(sessionId)
+      return { initializedSessions: newSet }
+    }),
+  isSessionInitialized: (sessionId) => get().initializedSessions.has(sessionId),
+  setIsStreaming: (isStreaming) => set({ isStreaming }),
 }))

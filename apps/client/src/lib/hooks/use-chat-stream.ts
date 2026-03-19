@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import { api } from '../api-client';
 import { useChatStore } from '../store/chat-store';
 
@@ -10,18 +10,19 @@ interface UseChatStreamOptions {
 export function useChatStream(options?: UseChatStreamOptions) {
   const { onDone, onError } = options || {};
   const abortControllerRef = useRef<AbortController | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const addMessage = useChatStore((state) => state.addMessage);
   const addOrUpdateLastMessage = useChatStore((state) => state.addOrUpdateLastMessage);
+  const isStreaming = useChatStore((state) => state.isStreaming);
+  const setIsStreaming = useChatStore((state) => state.setIsStreaming);
 
   const stop = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
-      setIsLoading(false);
+      setIsStreaming(false);
     }
-  }, []);
+  }, [setIsStreaming]);
 
   const stream = useCallback(
     async (message: string, sessionId: string | undefined) => {
@@ -44,7 +45,7 @@ export function useChatStream(options?: UseChatStreamOptions) {
         },
       );
 
-      setIsLoading(true);
+      setIsStreaming(true);
 
       await api.chat.stream(
         message,
@@ -53,7 +54,7 @@ export function useChatStream(options?: UseChatStreamOptions) {
           addOrUpdateLastMessage(effectiveSessionId, content);
         },
         () => {
-          setIsLoading(false);
+          setIsStreaming(false);
           abortControllerRef.current = null;
           onDone?.();
         },
@@ -61,14 +62,14 @@ export function useChatStream(options?: UseChatStreamOptions) {
           if (err.name !== 'AbortError') {
             onError?.(err);
           }
-          setIsLoading(false);
+          setIsStreaming(false);
           abortControllerRef.current = null;
         },
         controller.signal,
       );
     },
-    [addMessage, addOrUpdateLastMessage, onDone, onError],
+    [addMessage, addOrUpdateLastMessage, setIsStreaming, onDone, onError],
   );
 
-  return { stream, stop, isLoading };
+  return { stream, stop, isLoading: isStreaming };
 }

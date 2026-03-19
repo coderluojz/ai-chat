@@ -1,10 +1,45 @@
 'use client';
 
-/**
- * (chat) route group 中的首页
- * ChatLayout 已在 layout.tsx 中渲染，这里不需要额外的包裹
- * ChatLayout 通过 useParams 读取 id，此处 id 为 null → 显示欢迎页
- */
+import { WelcomeView } from '@/components/chat/welcome-view'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { ChatInput } from '@/components/chat/input'
+import { useChatLayout } from '@/lib/hooks/use-chat-layout'
+
 export default function HomePage() {
-  return null;
+  const router = useRouter()
+  const [input, setInput] = useState('')
+
+  const {
+    isStreaming,
+    handleSubmit,
+    stop,
+  } = useChatLayout(null)
+
+  const handleSubmitWrapper = async () => {
+    if (!input.trim() || isStreaming) return
+    setInput('')
+
+    await handleSubmit(input, (newSessionId) => {
+      if (newSessionId) {
+        router.push(`/chat/${newSessionId}`)
+      }
+    })
+  }
+
+  return (
+    <div className="flex flex-col h-full relative bg-black/5 dark:bg-white/1px">
+      <div className="flex-1">
+        <WelcomeView />
+      </div>
+
+      <ChatInput
+        input={input}
+        setInput={setInput}
+        isLoading={isStreaming}
+        onSubmit={handleSubmitWrapper}
+        onStop={stop}
+      />
+    </div>
+  )
 }

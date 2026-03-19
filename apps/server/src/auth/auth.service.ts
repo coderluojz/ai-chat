@@ -184,4 +184,45 @@ export class AuthService {
       message: "密码重置成功，请使用新密码登录",
     };
   }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    const supabase = this.supabaseService.getClient();
+
+    // 获取用户邮箱
+    const { data: userData, error: getUserError } =
+      await supabase.auth.admin.getUserById(userId);
+
+    if (getUserError || !userData.user?.email) {
+      throw new UnauthorizedException("用户不存在");
+    }
+
+    // 验证当前密码（通过尝试登录）
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: userData.user.email,
+      password: currentPassword,
+    });
+
+    if (verifyError) {
+      throw new UnauthorizedException("当前密码错误");
+    }
+
+    // 更新密码
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+      userId,
+      { password: newPassword },
+    );
+
+    if (updateError) {
+      this.logger.warn(`更新密码失败: ${updateError.message}`);
+      throw new UnauthorizedException("密码更新失败，请重试");
+    }
+
+    return {
+      message: "密码修改成功",
+    };
+  }
 }

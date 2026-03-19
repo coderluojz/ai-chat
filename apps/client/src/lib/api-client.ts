@@ -109,6 +109,12 @@ class ApiClient {
         method: 'POST',
         body: JSON.stringify({ token, newPassword }),
       }),
+
+    changePassword: (currentPassword: string, newPassword: string) =>
+      this.request<{ message: string }>('/auth/change-password', {
+        method: 'PUT',
+        body: JSON.stringify({ currentPassword, newPassword }),
+      }),
   };
 
   sessions = {

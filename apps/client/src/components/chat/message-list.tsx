@@ -55,7 +55,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="inline-block px-5 py-4 rounded-2xl bubble-ai shadow-lg">
-                    <div className="prose prose-neutral prose-sm md:prose-base max-w-none prose-p:leading-relaxed prose-p:my-2 prose-headings:my-3 prose-pre:my-3 prose-ul:my-2 prose-ol:my-2 prose-li:my-1 text-foreground/95">
+                    <div className="prose prose-neutral prose-sm max-w-none prose-p:leading-relaxed prose-p:my-1 prose-headings:my-2 prose-pre:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 text-foreground/95">
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         rehypePlugins={[rehypeHighlight, rehypeRaw]}
@@ -69,7 +69,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                           }: any) {
                             const match = /language-(\w+)/.exec(className || '')
                             return !inline && match ? (
-                              <div className="group/code relative my-4 rounded-xl overflow-hidden shadow-xl border border-white/10 bg-gradient-to-b from-zinc-900 to-zinc-950">
+                              <div className="group/code relative my-2 rounded-xl overflow-hidden shadow-xl border border-white/10 bg-gradient-to-b from-zinc-900 to-zinc-950">
                                 <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-800/50 border-b border-white/5 backdrop-blur-sm">
                                   <span className="text-xs font-medium text-zinc-300 bg-zinc-700/50 px-2.5 py-1 rounded-lg font-mono tracking-wide">
                                     {match[1]}
@@ -113,7 +113,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                           },
                           p({ children }) {
                             return (
-                              <p className="mb-2 last:mb-0 leading-[1.75] text-foreground/95">
+                              <p className="mb-1 last:mb-0 leading-[1.6] text-foreground/95">
                                 {children}
                               </p>
                             )
@@ -132,63 +132,63 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                           },
                           blockquote({ children }) {
                             return (
-                              <blockquote className="my-4 pl-4 border-l-4 border-indigo-500/30 bg-indigo-500/5 py-2 pr-4 rounded-r-lg text-foreground/80 italic">
+                              <blockquote className="my-2 pl-3 border-l-3 border-indigo-500/30 bg-indigo-500/5 py-1.5 pr-3 rounded-r-lg text-foreground/80 italic">
                                 {children}
                               </blockquote>
                             )
                           },
                           h1({ children }) {
                             return (
-                              <h1 className="text-2xl font-bold mt-4 mb-2 text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+                              <h1 className="text-xl font-bold my-1.5! text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
                                 {children}
                               </h1>
                             )
                           },
                           h2({ children }) {
                             return (
-                              <h2 className="text-xl font-semibold mt-3.5 mb-2 text-foreground/95">
+                              <h2 className="text-lg font-semibold mt-2.5 mb-1 text-foreground/95">
                                 {children}
                               </h2>
                             )
                           },
                           h3({ children }) {
                             return (
-                              <h3 className="text-lg font-semibold mt-3 mb-1.5 text-foreground/90">
+                              <h3 className="text-base font-semibold mt-2 mb-1 text-foreground/90">
                                 {children}
                               </h3>
                             )
                           },
                           h4({ children }) {
                             return (
-                              <h4 className="text-base font-semibold mt-2.5 mb-1 text-foreground/85">
+                              <h4 className="text-sm font-semibold mt-1.5 mb-0.5 text-foreground/85">
                                 {children}
                               </h4>
                             )
                           },
                           h5({ children }) {
                             return (
-                              <h5 className="text-sm font-semibold mt-2 mb-1 text-foreground/80">
+                              <h5 className="text-sm font-semibold mt-1 mb-0.5 text-foreground/80">
                                 {children}
                               </h5>
                             )
                           },
                           h6({ children }) {
                             return (
-                              <h6 className="text-xs font-semibold mt-1.5 mb-0.5 text-foreground/75 uppercase tracking-wider">
+                              <h6 className="text-xs font-semibold mt-1 mb-0.5 text-foreground/75 uppercase tracking-wider">
                                 {children}
                               </h6>
                             )
                           },
                           ul({ children }) {
                             return (
-                              <ul className="my-3 pl-6 space-y-1.5 marker:text-indigo-500/60">
+                              <ul className="my-1.5 pl-5 space-y-0.5 marker:text-indigo-500/60">
                                 {children}
                               </ul>
                             )
                           },
                           ol({ children }) {
                             return (
-                              <ol className="my-3 pl-6 space-y-1.5 marker:text-indigo-500/60 marker:font-semibold">
+                              <ol className="my-1.5 pl-5 space-y-0.5 marker:text-indigo-500/60 marker:font-semibold">
                                 {children}
                               </ol>
                             )
@@ -216,12 +216,12 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                           },
                           hr() {
                             return (
-                              <hr className="my-6 border-t border-white/10" />
+                              <hr className="my-3 border-t border-white/10" />
                             )
                           },
                           table({ children }) {
                             return (
-                              <div className="my-4 overflow-x-auto rounded-lg border border-white/10">
+                              <div className="my-2 overflow-x-auto rounded-lg border border-white/10">
                                 <table className="w-full text-left border-collapse">
                                   {children}
                                 </table>

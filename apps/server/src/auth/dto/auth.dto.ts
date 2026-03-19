@@ -47,3 +47,14 @@ export class ResetPasswordDto {
   @IsNotEmpty({ message: "新密码不能为空" })
   newPassword!: string;
 }
+
+export class ChangePasswordDto {
+  @IsString()
+  @IsNotEmpty({ message: "当前密码不能为空" })
+  currentPassword!: string;
+
+  @IsString()
+  @MinLength(6, { message: "新密码长度不能少于 6 位" })
+  @IsNotEmpty({ message: "新密码不能为空" })
+  newPassword!: string;
+}
