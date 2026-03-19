@@ -1,12 +1,25 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { ChatOpenAI } from "@langchain/openai";
+import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
-import { BaseMessage } from "@langchain/core/messages";
+import { ChatOpenAI } from "@langchain/openai";
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { MessageRole } from "../common/enums/message-role.enum";
+
+const createHistoryMessages = (
+  history: [string, string][],
+): (HumanMessage | AIMessage)[] => {
+  return history.map(([role, content]) => {
+    const messageRole = role as MessageRole;
+    if (messageRole === MessageRole.USER) {
+      return new HumanMessage({ content });
+    }
+    return new AIMessage({ content });
+  });
+};
 
 @Injectable()
 export class ChatService {
@@ -40,10 +53,7 @@ export class ChatService {
     message: string,
     history: [string, string][] = [],
   ): Promise<IterableReadableStream<BaseMessage>> {
-    const formattedHistory = history.map(([role, content]) => {
-      if (role === "user") return { role: "human", content };
-      return { role: "ai", content };
-    });
+    const historyMessages = createHistoryMessages(history);
 
     const prompt = ChatPromptTemplate.fromMessages([
       [
@@ -58,7 +68,7 @@ export class ChatService {
 
     return await chain.stream({
       input: message,
-      history: formattedHistory,
+      history: historyMessages,
     });
   }
 }

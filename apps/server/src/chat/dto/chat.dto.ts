@@ -4,14 +4,14 @@ import {
   IsOptional,
   IsString,
   ValidateNested,
-  IsIn,
+  IsEnum,
 } from "class-validator";
 import { Type } from "class-transformer";
+import { MessageRole } from "../../common/enums/message-role.enum";
 
 export class HistoryMessageDto {
-  @IsString()
-  @IsIn(["user", "assistant", "system"])
-  role!: "user" | "assistant" | "system";
+  @IsEnum(MessageRole, { message: "无效的消息角色" })
+  role!: MessageRole;
 
   @IsString()
   @IsNotEmpty()

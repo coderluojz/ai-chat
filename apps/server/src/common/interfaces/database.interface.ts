@@ -1,3 +1,5 @@
+import { MessageRole } from "../enums/message-role.enum";
+
 export interface Session {
   id: string;
   user_id: string;
@@ -9,7 +11,7 @@ export interface Session {
 export interface Message {
   id: string;
   session_id: string;
-  role: "user" | "assistant" | "system";
+  role: MessageRole;
   content: string;
   created_at: string;
 }

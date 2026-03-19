@@ -9,6 +9,7 @@ import {
   JwtPayload,
 } from "../common/decorators/current-user.decorator";
 import { Message } from "../common/interfaces/database.interface";
+import { MessageRole } from "../common/enums/message-role.enum";
 
 @Controller("chat")
 export class ChatController {
@@ -45,7 +46,7 @@ export class ChatController {
       await this.sessionService.addMessage(
         userId,
         sessionId,
-        "user",
+        MessageRole.USER,
         body.message,
       );
     }
@@ -102,7 +103,7 @@ export class ChatController {
         await this.sessionService.addMessage(
           userId,
           sessionId,
-          "assistant",
+          MessageRole.ASSISTANT,
           fullContent,
         );
       }

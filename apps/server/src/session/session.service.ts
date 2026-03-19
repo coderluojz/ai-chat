@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { SupabaseService } from "../supabase/supabase.service";
 import { Message, Session } from "../common/interfaces/database.interface";
+import { MessageRole } from "../common/enums/message-role.enum";
 
 @Injectable()
 export class SessionService {
@@ -100,7 +101,7 @@ export class SessionService {
   async addMessage(
     userId: string,
     sessionId: string,
-    role: "user" | "assistant" | "system",
+    role: MessageRole,
     content: string,
   ): Promise<Message> {
     const supabase = this.supabaseService.getClient();
