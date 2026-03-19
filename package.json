@@ -24,5 +24,8 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@tailwindcss/typography": "^0.5.19"
+  }
 }

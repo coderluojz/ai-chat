@@ -1,0 +1,9 @@
+{
+  "name": "@ai-chat/eslint-config",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-turbo": "^1.12.4"
+  }
+}

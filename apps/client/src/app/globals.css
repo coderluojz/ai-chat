@@ -1,0 +1,386 @@
+@import "tailwindcss";
+/* @plugin "@tailwindcss/typography"; */
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  
+  --color-sidebar-bg: hsl(var(--sidebar-background));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+
+  --font-sans: "Inter", var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  
+  --radius-3xl: 1.5rem;
+  --radius-2xl: 1rem;
+  --radius-xl: 0.75rem;
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Welcome 3.0 Custom Animations */
+  @keyframes text-gradient-scan {
+    0% { background-position: -100% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  @keyframes float-slow {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(2%, 3%) rotate(1deg); }
+    66% { transform: translate(-1%, 2%) rotate(-1deg); }
+  }
+}
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --primary: 240 5.9% 10%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+  --muted: 240 3.8% 46.1%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 245 58% 51%; /* Indigo-600 */
+  --accent-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 245 58% 51%;
+  
+  --sidebar-background: 240 5% 96%;
+  --sidebar-border: 240 5.9% 90%;
+
+  --radius: 1rem;
+  --radius-3xl: 2rem;
+  --radius-4xl: 2.5rem;
+
+  /* Glassmorphism Refinement */
+  --glass-bg: rgba(255, 255, 255, 0.015);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-blur: 12px;
+  
+  /* Fluid Animation Tokens - Softened */
+  --fluid-color-1: rgba(99, 102, 241, 0.08);
+  --fluid-color-2: rgba(168, 85, 247, 0.08);
+  --fluid-color-3: rgba(236, 72, 153, 0.08);
+
+  /* 用户气泡：极光渐变系统 */
+  --user-bubble-from: 245 58% 51%; /* Indigo-600 */
+  --user-bubble-to: 250 89% 65%;   /* Medium Indigo */
+  
+  /* AI 气泡：深度玻璃系统 (Liquid Glass) */
+  --ai-bubble-bg: rgba(255, 255, 255, 0.015);
+  --ai-bubble-border: rgba(255, 255, 255, 0.08);
+  --ai-bubble-highlight: linear-gradient(135deg, rgba(255, 255, 255, 0.15), transparent, rgba(99, 102, 241, 0.1));
+  
+  /* 虹彩变量 (Iridescent) */
+  --iridescent-1: rgba(124, 58, 237, 0.05);
+  --iridescent-2: rgba(6, 182, 212, 0.05);
+}
+
+@keyframes liquid-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes bubble-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-2px) scale(1.005); }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 4%;
+    --card-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 5% 64.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 250 89% 65%;
+    --accent-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 250 89% 65%;
+    
+    --sidebar-background: 240 10% 6%;
+    --sidebar-border: 240 3.7% 15.9%;
+
+    --user-bubble: 240 3.7% 15.9%;
+    --ai-bubble: 240 10% 4%;
+
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+  }
+}
+
+@layer components {
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.02);
+  }
+
+  .glass-morphism {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 20s ease-in-out infinite;
+  }
+  
+  .animate-float-delayed {
+    animation: float 25s ease-in-out infinite reverse;
+    animation-delay: -5s;
+  }
+
+  .animate-float-slow {
+    animation: float-slow 30s ease-in-out infinite;
+  }
+
+  /* 呼吸灯效果 */
+  .animate-pulse-subtle {
+    animation: pulse-subtle 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse-subtle {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+  }
+
+  /* 粒子/核心闪烁 */
+  .animate-core-glow {
+    animation: core-glow 4s ease-in-out infinite;
+  }
+
+  @keyframes core-glow {
+    0%, 100% { filter: drop-shadow(0 0 2px var(--color-accent)) opacity(0.8); }
+    50% { filter: drop-shadow(0 0 8px var(--color-accent)) opacity(1); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(5%, 5%) scale(1.1); }
+    66% { transform: translate(-3%, 8%) scale(0.95); }
+  }
+
+  /* 精致非对称圆角 & 液体动感 */
+  .bubble-user {
+    background: linear-gradient(135deg, hsl(var(--user-bubble-from)), hsl(var(--user-bubble-to)));
+    background-size: 200% 200%;
+    animation: liquid-flow 8s ease infinite;
+    color: white;
+    border-bottom-right-radius: 4px !important;
+    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.3), 0 8px 10px -6px rgba(168, 85, 247, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .bubble-user:hover {
+    transform: scale(1.02) translateY(-2px);
+  }
+  
+  .bubble-ai {
+    background: var(--ai-bubble-bg);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--ai-bubble-border);
+    border-top-left-radius: 4px !important;
+    box-shadow: 
+      0 10px 30px -10px rgba(0, 0, 0, 0.2),
+      inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+    animation: bubble-float 6s ease-in-out infinite;
+  }
+
+  /* 虹彩高光效果 */
+  .bubble-ai::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(225deg, var(--iridescent-1), transparent, var(--iridescent-2));
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  /* AI 气泡高级边缘反射 */
+  .bubble-ai::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent 40%, rgba(255,255,255,0.05) 60%, rgba(255,255,255,0.1));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    transition: all 0.3s;
+  }
+  .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Welcome 3.0 Utilities */
+  .text-glow-sm {
+    text-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+  }
+
+  .glass-premium {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 
+      0 12px 40px -10px rgba(0, 0, 0, 0.4),
+      inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .animate-gradient-text {
+    background: linear-gradient(to right, #6366f1, #a855f7, #ec4899, #6366f1);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: liquid-flow 6s linear infinite;
+  }
+
+  .particle-base {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0.15;
+    filter: blur(1px);
+  }
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* 优化 Markdown 渲染样式 */
+.prose {
+  --tw-prose-body: hsl(var(--foreground));
+  --tw-prose-headings: hsl(var(--foreground));
+  --tw-prose-links: hsl(var(--primary));
+  --tw-prose-bold: hsl(var(--foreground));
+  --tw-prose-counters: hsl(var(--muted-foreground));
+  --tw-prose-bullets: hsl(var(--muted-foreground));
+  --tw-prose-hr: hsl(var(--border));
+  --tw-prose-quotes: hsl(var(--foreground));
+  --tw-prose-quote-borders: hsl(var(--border));
+  --tw-prose-captions: hsl(var(--muted-foreground));
+  --tw-prose-code: hsl(var(--foreground));
+  --tw-prose-pre-code: hsl(var(--foreground));
+  --tw-prose-pre-bg: transparent;
+  --tw-prose-th-borders: hsl(var(--border));
+  --tw-prose-td-borders: hsl(var(--border));
+  max-width: none !important;
+}
+
+.prose p {
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+  line-height: 1.75;
+}
+
+.prose p:first-child {
+  margin-top: 0 !important;
+}
+
+.prose p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.prose pre {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  padding: 0 !important;
+  background-color: transparent !important;
+}
+
+.prose ul, .prose ol {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.625em;
+}
+
+.prose li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose h1, .prose h2, .prose h3 {
+  margin-top: 2em;
+  margin-bottom: 1em;
+  font-weight: 700;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted) / 0.5);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.3);
+}
