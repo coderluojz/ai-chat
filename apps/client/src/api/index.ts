@@ -1,0 +1,5 @@
+export { httpClient, ApiError, setToken, handleUnauthorized } from './axios-instance'
+export type { ApiErrorResponse, HttpClient } from './axios-instance'
+export { authApi } from './auth'
+export { sessionsApi } from './sessions'
+export { chatApi } from './chat'

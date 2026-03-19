@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { api } from '@/lib/api-client'
+import { useForgotPassword } from '@/lib/queries/use-auth-query'
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,24 +17,22 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 
 export default function ForgotPasswordPage() {
-  const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [isSubmitted, setIsSubmitted] = useState(false)
 
+  const forgotPasswordMutation = useForgotPassword()
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
 
     try {
-      await api.auth.forgotPassword(email)
+      await forgotPasswordMutation.mutateAsync(email)
       setIsSubmitted(true)
       toast.success('重置邮件已发送')
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : '发送失败，请稍后重试'
       toast.error(message)
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -141,7 +139,7 @@ export default function ForgotPasswordPage() {
                 type="email"
                 placeholder="name@example.com"
                 required
-                disabled={isLoading}
+                disabled={forgotPasswordMutation.isPending}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-white/5 dark:bg-black/20 border-white/10 focus:border-accent/40 focus:ring-accent/10 h-14 pl-12 rounded-2xl transition-all duration-300 placeholder:text-muted-foreground/30 text-base"
@@ -152,9 +150,9 @@ export default function ForgotPasswordPage() {
           <Button
             type="submit"
             className="w-full h-14 rounded-2xl mt-4 font-black uppercase tracking-widest transition-all shadow-xl shadow-accent/20 bg-accent hover:bg-accent/90 text-white active:scale-[0.98] group/btn text-sm cursor-pointer"
-            disabled={isLoading}
+            disabled={forgotPasswordMutation.isPending}
           >
-            {isLoading ? (
+            {forgotPasswordMutation.isPending ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 正在发送验证...

@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { api } from '@/lib/api-client'
+import { useChangePassword } from '@/lib/queries/use-auth-query'
 import { useAuthStore } from '@/lib/store/auth-store'
 import {
   ArrowLeft,
@@ -24,7 +24,8 @@ export function SettingsView() {
   const user = useAuthStore((state) => state.user)
   const router = useRouter()
 
-  const [isLoading, setIsLoading] = useState(false)
+  const changePasswordMutation = useChangePassword()
+
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -47,10 +48,8 @@ export function SettingsView() {
       return
     }
 
-    setIsLoading(true)
-
     try {
-      await api.auth.changePassword(currentPassword, newPassword)
+      await changePasswordMutation.mutateAsync({ currentPassword, newPassword })
       toast.success('密码修改成功')
       setCurrentPassword('')
       setNewPassword('')
@@ -58,8 +57,6 @@ export function SettingsView() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '修改失败，请重试'
       toast.error(message)
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -169,7 +166,7 @@ export function SettingsView() {
                   type="password"
                   placeholder="请输入当前密码"
                   required
-                  disabled={isLoading}
+                  disabled={changePasswordMutation.isPending}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   className="bg-white/5 dark:bg-black/20 border-white/10 focus:border-accent/40 focus:ring-accent/10 h-14 pl-12 rounded-2xl transition-all duration-300 placeholder:text-muted-foreground/30 text-base"
@@ -191,7 +188,7 @@ export function SettingsView() {
                   type="password"
                   placeholder="请输入新密码"
                   required
-                  disabled={isLoading}
+                  disabled={changePasswordMutation.isPending}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   minLength={6}
@@ -214,7 +211,7 @@ export function SettingsView() {
                   type="password"
                   placeholder="请再次输入新密码"
                   required
-                  disabled={isLoading}
+                  disabled={changePasswordMutation.isPending}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   minLength={6}
@@ -226,9 +223,9 @@ export function SettingsView() {
             <Button
               type="submit"
               className="w-full h-14 rounded-2xl mt-4 font-black uppercase tracking-widest transition-all shadow-xl shadow-accent/20 bg-accent hover:bg-accent/90 text-white active:scale-[0.98] group/btn text-sm cursor-pointer"
-              disabled={isLoading}
+              disabled={changePasswordMutation.isPending}
             >
-              {isLoading ? (
+              {changePasswordMutation.isPending ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-5 w-5 animate-spin" />
                   正在更新密码...

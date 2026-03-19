@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { api } from '../api-client';
+import { chatApi } from '@/api';
 import { useChatStore } from '../store/chat-store';
 
 interface UseChatStreamOptions {
@@ -47,7 +47,7 @@ export function useChatStream(options?: UseChatStreamOptions) {
 
       setIsStreaming(true);
 
-      await api.chat.stream(
+      await chatApi.stream(
         message,
         sessionId,
         (content) => {

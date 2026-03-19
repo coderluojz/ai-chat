@@ -1,8 +1,8 @@
-import { Injectable, UnauthorizedException, Logger } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
+import { Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { SupabaseService } from "../supabase/supabase.service";
+import { JwtService } from "@nestjs/jwt";
 import { User } from "../common/interfaces/database.interface";
+import { SupabaseService } from "../supabase/supabase.service";
 
 interface TokenPayload {
   id: string;
@@ -49,13 +49,19 @@ export class AuthService {
     });
 
     if (result.error) {
-      this.logger.warn(`注册失败: ${result.error.message}`);
+      this.logger.error(`注册失败: ${result.error.message}`, result.error);
       throw new UnauthorizedException(result.error.message);
     }
 
     const supabaseUser = result.data.user;
     if (!supabaseUser) {
+      this.logger.error("注册失败: 未返回用户数据");
       throw new UnauthorizedException("注册失败，请稍后重试");
+    }
+
+    // 检查是否需要邮箱确认
+    if (!supabaseUser.email_confirmed_at && result.data.session === null) {
+      this.logger.warn(`用户注册成功但需要邮箱确认: ${email}`);
     }
 
     const token = this.generateToken(supabaseUser as unknown as TokenPayload);
@@ -112,7 +118,16 @@ export class AuthService {
 
     const result = await supabase.auth.admin.getUserById(userId);
 
-    if (result.error || !result.data.user) {
+    if (result.error) {
+      this.logger.error(
+        `获取用户信息失败: ${result.error.message}`,
+        result.error,
+      );
+      throw new UnauthorizedException("用户不存在");
+    }
+
+    if (!result.data.user) {
+      this.logger.warn(`用户不存在: ${userId}`);
       throw new UnauthorizedException("用户不存在");
     }
 

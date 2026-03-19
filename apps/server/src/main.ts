@@ -29,7 +29,8 @@ async function bootstrap() {
     "http://localhost:3000",
   );
   app.enableCors({
-    origin: corsOrigin.split(",").map((origin) => origin.trim()),
+    // origin: corsOrigin.split(",").map((origin) => origin.trim()),
+    origin: "*",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],

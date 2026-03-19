@@ -3,12 +3,12 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { api, ApiError } from './api-client';
+import { ApiError } from '@/api';
 import { useAuthStore } from './store/auth-store';
 import { useLogin, useRegister, useLogout, useProfile } from './queries/use-auth-query';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { user, setUser } = useAuthStore();
+  const { user, token, setUser, logout: storeLogout } = useAuthStore();
   const router = useRouter();
   const profileQuery = useProfile();
 
@@ -19,8 +19,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const initializedRef = useRef(false);
 
   useEffect(() => {
-    const token = api.getToken();
-    
     if (!token) {
       initializedRef.current = true;
       return;
@@ -30,12 +28,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       initializedRef.current = true;
       profileQuery.refetch().catch((err: unknown) => {
         if (err instanceof ApiError && (err.code === 401 || err.code === 403)) {
-          api.setToken(null);
-          setUser(null);
+          storeLogout();
         }
       });
     }
-  }, [setUser, profileQuery]);
+  }, [token, storeLogout, profileQuery]);
 
   const handleLogin = async (email: string, password: string) => {
     try {
@@ -69,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
 
-  const isLoading = !initializedRef.current && !!api.getToken();
+  const isLoading = !initializedRef.current && !!token;
 
   return (
     <AuthContext.Provider

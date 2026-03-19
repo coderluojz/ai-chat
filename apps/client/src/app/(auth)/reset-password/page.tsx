@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { api } from '@/lib/api-client'
+import { useResetPassword } from '@/lib/queries/use-auth-query'
 import {
   ArrowLeft,
   ArrowRight,
@@ -22,6 +22,8 @@ function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  const resetPasswordMutation = useResetPassword()
+
   // 处理 Supabase 的 hash fragment (#access_token=xxx&type=recovery)
   // 以及普通查询参数 (?token=xxx)
   const getTokenFromHash = () => {
@@ -34,7 +36,6 @@ function ResetPasswordForm() {
 
   const token = searchParams.get('token') || searchParams.get('access_token') || getTokenFromHash();
 
-  const [isLoading, setIsLoading] = useState(false)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
@@ -57,17 +58,13 @@ function ResetPasswordForm() {
       return
     }
 
-    setIsLoading(true)
-
     try {
-      await api.auth.resetPassword(token, password)
+      await resetPasswordMutation.mutateAsync({ token, newPassword: password })
       setIsSuccess(true)
       toast.success('密码重置成功')
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '重置失败，请重试'
       toast.error(message)
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -165,7 +162,7 @@ function ResetPasswordForm() {
                 type="password"
                 placeholder="请输入新密码"
                 required
-                disabled={isLoading}
+                disabled={resetPasswordMutation.isPending}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 minLength={6}
@@ -188,7 +185,7 @@ function ResetPasswordForm() {
                 type="password"
                 placeholder="请再次输入新密码"
                 required
-                disabled={isLoading}
+                disabled={resetPasswordMutation.isPending}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 minLength={6}
@@ -200,9 +197,9 @@ function ResetPasswordForm() {
           <Button
             type="submit"
             className="w-full h-14 rounded-2xl mt-4 font-black uppercase tracking-widest transition-all shadow-xl shadow-accent/20 bg-accent hover:bg-accent/90 text-white active:scale-[0.98] group/btn text-sm cursor-pointer"
-            disabled={isLoading}
+            disabled={resetPasswordMutation.isPending}
           >
-            {isLoading ? (
+            {resetPasswordMutation.isPending ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 正在更新密码...
