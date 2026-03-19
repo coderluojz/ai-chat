@@ -1,37 +1,43 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useScrollToBottom(
   scrollRef: React.RefObject<HTMLDivElement | null>,
-  messagesLength: number,
+  messages: any[],
+  isLoading?: boolean,
 ) {
-  const lastMessagesLength = useRef(messagesLength);
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const messagesData = JSON.stringify(messages)
+  const lastMessagesData = useRef(messagesData)
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
+
+  const scrollToBottom = useCallback(() => {
+    if (!scrollRef.current) return
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [scrollRef])
 
   const handleScroll = useCallback(() => {
-    if (!scrollRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
-    setShouldAutoScroll(isAtBottom);
-  }, [scrollRef]);
+    if (!scrollRef.current) return
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 100
+    setShouldAutoScroll(isAtBottom)
+  }, [scrollRef])
 
   useEffect(() => {
-    if (scrollRef.current && messagesLength > 0) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      setShouldAutoScroll(true);
+    if (messages.length > 0) {
+      scrollToBottom()
     }
-    lastMessagesLength.current = messagesLength;
-  }, [scrollRef, messagesLength]);
+  }, [messages, scrollToBottom])
 
   useEffect(() => {
-    if (messagesLength > lastMessagesLength.current) {
-      scrollRef.current?.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
-      setShouldAutoScroll(true);
+    if (messagesData > lastMessagesData.current) {
+      if (shouldAutoScroll || isLoading) {
+        scrollRef.current?.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: 'smooth',
+        })
+      }
     }
-    lastMessagesLength.current = messagesLength;
-  }, [messagesLength, scrollRef]);
+    lastMessagesData.current = messagesData
+  }, [messagesData, scrollRef, shouldAutoScroll, isLoading])
 
-  return { handleScroll };
+  return { handleScroll }
 }
