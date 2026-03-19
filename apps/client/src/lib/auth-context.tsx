@@ -1,108 +1,102 @@
-'use client'
+'use client';
 
-import { useRouter } from 'next/navigation'
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react'
-import { toast } from 'sonner'
-import { api } from './api'
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef } from 'react';
+import { toast } from 'sonner';
+import { api } from './api-client';
+import { useAuthStore } from './store/auth-store';
+import { useLogin, useRegister, useLogout, useProfile } from './queries/use-auth-query';
 
-type User = {
-  id: string
-  email: string
-  name: string
-}
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { user, setUser } = useAuthStore();
+  const router = useRouter();
+  const profileQuery = useProfile();
 
-type AuthContextType = {
-  user: User | null
-  isLoading: boolean
-  login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string, name?: string) => Promise<void>
-  logout: () => void
-}
+  const loginMutation = useLogin();
+  const registerMutation = useRegister();
+  const logout = useLogout();
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+  const initializedRef = useRef(false);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
-
-  // 启动时检查已有 token
   useEffect(() => {
-    const token = api.getToken()
-    if (token) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsLoading(true)
-      api
-        .getProfile()
-        .then((profile) => {
-          setUser({
-            id: profile.id,
-            email: profile.email || '',
-            name: profile.name || '',
-          })
-        })
-        .catch((err) => {
-          // 只有在明确是 401 Unauthorized 或者 403 Forbidden 时才清除 token
-          // 避免因为 500 系统错误或者网络波动导致用户被强制登出
-          if (err.status === 401 || err.status === 403) {
-            api.setToken(null)
-            setUser(null)
-          }
-          console.error('Auth initialization error:', err)
-        })
-        .finally(() => setIsLoading(false))
-    } else {
-      setIsLoading(false)
+    const token = api.getToken();
+    
+    if (!token) {
+      initializedRef.current = true;
+      return;
     }
-  }, [])
 
-  const login = useCallback(
-    async (email: string, password: string) => {
-      const result = await api.login(email, password)
-      api.setToken(result.access_token)
-      setUser(result.user)
-      toast.success('登录成功')
-      router.push('/')
-    },
-    [router],
-  )
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      profileQuery.refetch().catch((err: any) => {
+        if (err.status === 401 || err.status === 403) {
+          api.setToken(null);
+          setUser(null);
+        }
+      });
+    }
+  }, [setUser, profileQuery]);
 
-  const register = useCallback(
-    async (email: string, password: string, name?: string) => {
-      const result = await api.register(email, password, name)
-      api.setToken(result.access_token)
-      setUser(result.user)
-      toast.success('账户创建成功')
-      router.push('/')
-    },
-    [router],
-  )
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      await loginMutation.mutateAsync({ email, password });
+      toast.success('登录成功');
+      router.push('/');
+    } catch (err: any) {
+      throw err;
+    }
+  };
 
-  const logout = useCallback(() => {
-    api.setToken(null)
-    setUser(null)
-    toast.success('已安全退出登录')
-    router.push('/login')
-  }, [router])
+  const handleRegister = async (email: string, password: string, name?: string) => {
+    try {
+      await registerMutation.mutateAsync({ email, password, name });
+      toast.success('账户创建成功');
+      router.push('/');
+    } catch (err: any) {
+      throw err;
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast.success('已安全退出登录');
+    router.push('/login');
+  };
+
+  const isLoading = !initializedRef.current && !!api.getToken();
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user: user || profileQuery.data || null,
+        isLoading: isLoading || profileQuery.isLoading,
+        login: handleLogin,
+        register: handleRegister,
+        logout: handleLogout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
+import { createContext, useContext } from 'react';
+import type { User } from './types';
+
+type AuthContextType = {
+  user: User | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name?: string) => Promise<void>;
+  logout: () => void;
+};
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth 必须在 AuthProvider 内使用')
+    throw new Error('useAuth 必须在 AuthProvider 内使用');
   }
-  return context
+  return context;
 }

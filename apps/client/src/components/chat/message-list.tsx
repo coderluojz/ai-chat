@@ -1,11 +1,12 @@
 'use client'
 
 import { Bot, Copy } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
 import remarkGfm from 'remark-gfm'
+import { useScrollToBottom } from '@/lib/hooks/use-scroll-to-bottom'
 
 type Message = {
   id: string
@@ -20,52 +21,7 @@ type MessageListProps = {
 
 export function MessageList({ messages, isLoading }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
-  const lastMessagesLength = useRef(messages.length)
-
-  // 监听手动滚动，判断是否开启/关闭粘性滚动
-  const handleScroll = () => {
-    if (!scrollRef.current) return
-    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current
-
-    // 如果距离底部小于 100px，则开启粘性滚动
-    const isAtBottom = scrollHeight - scrollTop - clientHeight < 100
-    setShouldAutoScroll(isAtBottom)
-  }
-
-  // 场景：路由切换或初始化加载
-  useEffect(() => {
-    if (scrollRef.current && messages.length > 0) {
-      // 瞬间定位到底部，不闪烁
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-      setShouldAutoScroll(true)
-    }
-    lastMessagesLength.current = messages.length
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages.length === 0 ? 0 : messages[0]?.id])
-
-  // 场景：有新消息进入（用户发送）
-  useEffect(() => {
-    if (messages.length > lastMessagesLength.current) {
-      const lastMsg = messages[messages.length - 1]
-      if (lastMsg.role === 'user') {
-        // 用户发送消息，强制平滑滚到底部
-        scrollRef.current?.scrollTo({
-          top: scrollRef.current.scrollHeight,
-          behavior: 'smooth'
-        })
-        setShouldAutoScroll(true)
-      }
-    }
-    lastMessagesLength.current = messages.length
-  }, [messages])
-
-  // 场景：AI 流式输入文字内容更新
-  useEffect(() => {
-    if (shouldAutoScroll && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [messages, shouldAutoScroll])
+  const { handleScroll } = useScrollToBottom(scrollRef, messages.length)
 
   if (messages.length === 0) return null
 
