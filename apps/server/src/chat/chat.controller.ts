@@ -1,15 +1,18 @@
-import { Controller, Post, Body, UseGuards, Req, Res } from "@nestjs/common";
+import { Body, Controller, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { Request, Response } from "express";
-import { ChatService } from "./chat.service";
-import { SessionService } from "../session/session.service";
+import { randomUUID } from "crypto";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
-import { ChatCompletionsDto } from "./dto/chat.dto";
 import {
   CurrentUser,
   JwtPayload,
 } from "../common/decorators/current-user.decorator";
-import { Message } from "../common/interfaces/database.interface";
 import { MessageRole } from "../common/enums/message-role.enum";
+import { Message } from "../common/interfaces/database.interface";
+import { SSEEventType } from "../common/interfaces/sse-event.interface";
+import { BlockType } from "../common/interfaces/ui-block.interface";
+import { SessionService } from "../session/session.service";
+import { ChatService } from "./chat.service";
+import { ChatCompletionsDto } from "./dto/chat.dto";
 
 @Controller("chat")
 export class ChatController {
@@ -29,6 +32,7 @@ export class ChatController {
     const userId = user.sub;
     const sessionId = body.session_id;
 
+    // 验证会话所有权并保存用户消息
     if (sessionId) {
       const isOwner = await this.sessionService.verifySessionOwnership(
         userId,
@@ -51,6 +55,7 @@ export class ChatController {
       );
     }
 
+    // 构建对话历史
     let history: [string, string][] = body.history
       ? body.history.map((h) => [h.role, h.content] as [string, string])
       : [];
@@ -62,12 +67,12 @@ export class ChatController {
       );
     }
 
+    // 设置 SSE 头部
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
     res.flushHeaders();
 
-    const stream = await this.chatService.streamChat(body.message, history);
     let fullContent = "";
     let isAborted = false;
 
@@ -76,26 +81,79 @@ export class ChatController {
     });
 
     try {
+      const stream = await this.chatService.streamChat(body.message, history);
+      const textBlockId = randomUUID();
+      const toolCalls: Array<{
+        id: string;
+        name: string;
+        args: Record<string, unknown>;
+      }> = [];
+
       for await (const chunk of stream) {
         if (isAborted) break;
 
-        const chunkContent = chunk?.content;
+        const chunkContent = (chunk as { content?: unknown })?.content;
         let textContent = "";
 
         if (typeof chunkContent === "string") {
           textContent = chunkContent;
         } else if (Array.isArray(chunkContent)) {
           textContent = chunkContent
-            .filter(
-              (c): c is { type: "text"; text: string } => c.type === "text",
-            )
+            .filter((c): c is { type: "text"; text: string } => c.type === "text")
             .map((c) => c.text)
             .join("");
         }
 
         if (textContent) {
           fullContent += textContent;
-          res.write(`data: ${JSON.stringify({ content: textContent })}\n\n`);
+          res.write(
+            `data: ${JSON.stringify({
+              type: SSEEventType.TEXT_DELTA,
+              blockId: textBlockId,
+              content: textContent,
+            })}\n\n`,
+          );
+        }
+
+        const chunkToolCalls =
+          (
+            chunk as {
+              tool_calls?: Array<{
+                id?: string;
+                name?: string;
+                args?: Record<string, unknown>;
+              }>;
+            }
+          )?.tool_calls || [];
+
+        for (const tc of chunkToolCalls) {
+          const existing = toolCalls.find((t) => t.id === tc.id);
+          if (existing) {
+            if (tc.args) {
+              existing.args = { ...existing.args, ...tc.args };
+            }
+          } else if (tc.id && tc.name) {
+            toolCalls.push({
+              id: tc.id,
+              name: tc.name,
+              args: tc.args || {},
+            });
+          }
+        }
+      }
+
+      if (!isAborted && toolCalls.length > 0) {
+        const blocks = await this.chatService.executeToolCalls(toolCalls);
+        for (const block of blocks) {
+          if (block.type === BlockType.TEXT) {
+            fullContent += (block.content as { text: string }).text;
+          }
+          res.write(
+            `data: ${JSON.stringify({
+              type: SSEEventType.BLOCK_COMPLETE,
+              block,
+            })}\n\n`,
+          );
         }
       }
 
@@ -108,10 +166,10 @@ export class ChatController {
         );
       }
     } catch (error) {
-      if (!isAborted) {
+      if (!isAborted && !res.writableEnded) {
         console.error("Chat streaming error:", error);
         res.write(
-          `data: ${JSON.stringify({ error: "流生成过程发生错误" })}\n\n`,
+          `data: ${JSON.stringify({ type: SSEEventType.ERROR, message: "流生成过程发生错误" })}\n\n`,
         );
       }
     } finally {

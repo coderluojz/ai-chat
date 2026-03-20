@@ -387,27 +387,38 @@ body {
 
 /* 代码高亮样式 - GitHub Dark Modern 主题 */
 :root {
-  --hl-keyword: #ff7b72;
-  --hl-def: #d2a8ff;
-  --hl-variable: #79c0ff;
-  --hl-title: #7ee787;
-  --hl-params: #ffb088;
-  --hl-string: #a5d6ff;
-  --hl-comment: #8b949e;
-  --hl-number: #79c0ff;
-  --hl-meta: #ffa657;
-  --hl-builtin: #d2a8ff;
-  --hl-attr: #79c0ff;
-  --hl-property: #79c0ff;
-  --hl-class: #ffa657;
-  --hl-function: #d2a8ff;
-  --hl-operator: #ff7b72;
+  --hl-keyword: #ff8e8a;
+  --hl-def: #e2b8ff;
+  --hl-variable: #8ad3ff;
+  --hl-title: #8df0a8;
+  --hl-params: #ffc79f;
+  --hl-string: #c4e7ff;
+  --hl-comment: #94a3b8;
+  --hl-number: #7dd3fc;
+  --hl-meta: #ffb86b;
+  --hl-builtin: #ddb7ff;
+  --hl-attr: #8ad3ff;
+  --hl-property: #8ad3ff;
+  --hl-class: #ffb86b;
+  --hl-function: #e2b8ff;
+  --hl-operator: #ff938a;
 }
 
 pre code {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 13px;
   line-height: 1.7;
+}
+
+.hljs,
+.code-surface code,
+.code-surface pre {
+  color: #f8fafc;
+  text-shadow: 0 0 0.01px rgba(248, 250, 252, 0.35);
+}
+
+.code-surface .hljs {
+  background: transparent;
 }
 
 /* 代码高亮颜色 */
@@ -424,7 +435,7 @@ pre code {
 .hljs-selector-tag,
 .hljs-subst {
   color: var(--hl-keyword);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .hljs-number,
@@ -444,6 +455,7 @@ pre code {
 .hljs-section,
 .hljs-selector-id {
   color: var(--hl-title);
+  font-weight: 600;
 }
 
 .hljs-type,

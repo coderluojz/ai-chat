@@ -1,3 +1,5 @@
+import type { UIBlock } from './types/block';
+
 export type User = {
   id: string;
   email: string;
@@ -8,7 +10,10 @@ export type User = {
 export type Message = {
   id: string;
   role: 'user' | 'assistant';
+  /** 纯文本内容（向后兼容，用于数据库存储） */
   content: string;
+  /** 多模态 Block 数组（Generative UI） */
+  blocks?: UIBlock[];
   created_at?: string;
 };
 

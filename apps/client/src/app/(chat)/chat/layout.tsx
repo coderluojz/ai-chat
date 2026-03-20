@@ -52,7 +52,7 @@ export default function ChatContentLayout({ children }: { children: React.ReactN
         </div>
       ) : (
         <div className="flex-1 overflow-hidden">
-          <MessageList messages={messages} isLoading={isStreaming} />
+          <MessageList messages={messages} isLoading={isStreaming} activeSessionId={activeSessionId} />
         </div>
       )}
 

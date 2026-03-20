@@ -1,43 +1,110 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+
+const BOTTOM_THRESHOLD_PX = 100
 
 export function useScrollToBottom(
   scrollRef: React.RefObject<HTMLDivElement | null>,
   messages: any[],
   isLoading?: boolean,
+  resetKey?: string | null,
 ) {
   const messagesData = JSON.stringify(messages)
-  const lastMessagesData = useRef(messagesData)
+
+  const previousMessagesDataRef = useRef(messagesData)
+  const initializedForKeyRef = useRef<string | null>(null)
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
 
-  const scrollToBottom = useCallback(() => {
-    if (!scrollRef.current) return
-    scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-  }, [scrollRef])
+  const scrollToBottom = useCallback(
+    (behavior: ScrollBehavior = 'auto') => {
+      const element = scrollRef.current
+      if (!element) return
+
+      element.scrollTo({
+        top: element.scrollHeight,
+        behavior,
+      })
+    },
+    [scrollRef],
+  )
 
   const handleScroll = useCallback(() => {
-    if (!scrollRef.current) return
-    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current
-    const isAtBottom = scrollHeight - scrollTop - clientHeight < 100
-    setShouldAutoScroll(isAtBottom)
+    const element = scrollRef.current
+    if (!element) return
+
+    const distanceFromBottom =
+      element.scrollHeight - element.scrollTop - element.clientHeight
+
+    setShouldAutoScroll(distanceFromBottom < BOTTOM_THRESHOLD_PX)
   }, [scrollRef])
 
   useEffect(() => {
-    if (messages.length > 0) {
-      scrollToBottom()
+    initializedForKeyRef.current = null
+    previousMessagesDataRef.current = messagesData
+    setShouldAutoScroll(true)
+  }, [resetKey])
+
+  useLayoutEffect(() => {
+    if (!scrollRef.current || messages.length === 0) {
+      return
     }
-  }, [messages, scrollToBottom])
+
+    if (initializedForKeyRef.current === resetKey) {
+      return
+    }
+
+    initializedForKeyRef.current = resetKey ?? '__default__'
+
+    scrollToBottom('auto')
+
+    const rafId = window.requestAnimationFrame(() => {
+      scrollToBottom('auto')
+    })
+
+    const timeoutId = window.setTimeout(() => {
+      scrollToBottom('auto')
+    }, 120)
+
+    return () => {
+      window.cancelAnimationFrame(rafId)
+      window.clearTimeout(timeoutId)
+    }
+  }, [messagesData, messages.length, resetKey, scrollRef, scrollToBottom])
 
   useEffect(() => {
-    if (messagesData > lastMessagesData.current) {
-      if (shouldAutoScroll || isLoading) {
-        scrollRef.current?.scrollTo({
-          top: scrollRef.current.scrollHeight,
-          behavior: 'smooth',
-        })
+    const hasContentChanged = previousMessagesDataRef.current !== messagesData
+    previousMessagesDataRef.current = messagesData
+
+    if (!hasContentChanged) {
+      return
+    }
+
+    if (shouldAutoScroll || isLoading) {
+      const rafId = window.requestAnimationFrame(() => {
+        scrollToBottom(isLoading ? 'auto' : 'smooth')
+      })
+
+      return () => {
+        window.cancelAnimationFrame(rafId)
       }
     }
-    lastMessagesData.current = messagesData
-  }, [messagesData, scrollRef, shouldAutoScroll, isLoading])
+  }, [messagesData, shouldAutoScroll, isLoading, scrollToBottom])
 
-  return { handleScroll }
+  useEffect(() => {
+    const element = scrollRef.current
+    if (!element || !isLoading || !shouldAutoScroll) {
+      return
+    }
+
+    const observer = new ResizeObserver(() => {
+      scrollToBottom('auto')
+    })
+
+    observer.observe(element)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [isLoading, scrollRef, scrollToBottom, shouldAutoScroll])
+
+  return { handleScroll, scrollToBottom }
 }

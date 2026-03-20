@@ -21,6 +21,65 @@ type ChatSidebarProps = {
   onLogout: () => void
 }
 
+type SessionItemProps = {
+  session: Session
+  isActive: boolean
+  onSelect: (id: string) => void
+  onDelete: (id: string) => void
+}
+
+function SessionItem({
+  session,
+  isActive,
+  onSelect,
+  onDelete,
+}: SessionItemProps) {
+  const title = session.title || '无标题对话'
+
+  return (
+    <div
+      onClick={() => onSelect(session.id)}
+      title={title}
+      className={`group/item relative w-full cursor-pointer overflow-hidden rounded-xl border transition-all duration-300 ${
+        isActive
+          ? 'border-accent/20 bg-accent/10 text-foreground shadow-sm'
+          : 'border-transparent text-muted-foreground hover:border-white/5 hover:bg-white/5 hover:text-foreground'
+      }`}
+    >
+      {isActive && (
+        <div className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-accent animate-in fade-in slide-in-from-left-2 duration-300" />
+      )}
+
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_32px] items-center gap-2 px-3 py-1">
+        <div className="min-w-0 overflow-hidden pr-1">
+          <span
+            className={`block truncate whitespace-nowrap text-[13px] leading-5 ${
+              isActive ? 'font-bold text-foreground' : 'font-medium'
+            }`}
+          >
+            {title}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete(session.id)
+          }}
+          aria-label={`删除会话 ${title}`}
+          title="删除会话"
+          className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-all hover:bg-destructive/10 hover:text-destructive ${
+            isActive ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'
+          }`}
+        >
+          <Trash2 className="h-3.5 w-3.5 shrink-0" />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function ChatSidebar({
   sessions,
   activeSessionId,
@@ -68,35 +127,13 @@ export function ChatSidebar({
       <ScrollArea className="flex-1 -mx-2 px-2 custom-scrollbar">
         <div className="space-y-2 pb-6">
           {sessions.map((session) => (
-            <div
+            <SessionItem
               key={session.id}
-              onClick={() => onSelectSession(session.id)}
-              className={`group/item w-full text-left px-3 py-2 rounded-xl text-[13px] cursor-pointer flex items-center justify-between transition-all duration-300 relative overflow-hidden ${
-                activeSessionId === session.id && !isSettings
-                  ? 'bg-accent/10 border border-accent/20 text-foreground font-bold shadow-sm'
-                  : 'hover:bg-white/5 border border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {activeSessionId === session.id && !isSettings && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-accent rounded-full animate-in fade-in slide-in-from-left-2 duration-300" />
-              )}
-              <span className="truncate flex-1 pr-1 relative z-10">
-                {session.title || '无标题对话'}
-              </span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDeleteSession(session.id)
-                }}
-                className={`cursor-pointer transition-all shrink-0 p-1.5 rounded-lg hover:bg-destructive/10 hover:text-destructive ${
-                  activeSessionId === session.id && !isSettings
-                    ? 'opacity-100'
-                    : 'opacity-0 group-hover/item:opacity-100'
-                }`}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
+              session={session}
+              isActive={activeSessionId === session.id && !isSettings}
+              onSelect={onSelectSession}
+              onDelete={onDeleteSession}
+            />
           ))}
           {sessions.length === 0 && (
             <div className="px-5 py-8 text-center border-2 border-dashed border-white/5 rounded-[2rem] opacity-30">
